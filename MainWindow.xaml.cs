@@ -50,7 +50,31 @@ namespace MatchGame
                 int index = random.Next(animalEmoji.Count); // Pick a random number between 0 and number of the elements in the list
                 string nextEmoji = animalEmoji[index]; // Retrieve emoji with given index from the emoji List
                 textBlock.Text = nextEmoji; // Update textBlock text with random emoji
-                animalEmoji.RemoveAt(index); // Remove randomly picke emoji
+                animalEmoji.RemoveAt(index); // Remove randomly pick emoji
+            }
+        }
+
+        // Make images response to mouse click
+        TextBlock lastTextBlockClicked;
+        bool findingMatch = false;
+        private void Text_Block_Mouse_down(object sender, MouseButtonEventArgs e)
+        {
+            TextBlock textBlock = sender as TextBlock;
+            if(findingMatch == false)
+            {
+                textBlock.Visibility = Visibility.Hidden;
+                lastTextBlockClicked = textBlock;
+                findingMatch = true;
+            }
+            else if (textBlock.Text == lastTextBlockClicked.Text)
+            {
+                textBlock.Visibility = Visibility.Hidden;
+                findingMatch = false;
+            }
+            else
+            {
+                lastTextBlockClicked.Visibility = Visibility.Visible;
+                findingMatch = false;
             }
         }
     }
