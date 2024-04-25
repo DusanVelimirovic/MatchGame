@@ -45,7 +45,7 @@ namespace MatchGame
             SetUpGame();
         }
 
-        // Timer logic
+        // Timer logic, displaying and stopping
         private void Timer_Tick(object sender, EventArgs e)
         {
             tenthsOfSecondsElapsed++;
@@ -55,7 +55,7 @@ namespace MatchGame
             if(matchesFound == 8)
             {
                 timer.Stop();
-                timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+                timeTextBlock.Text = timeTextBlock.Text + " - Play again?"; // Current time + prompt to play again
 
             }
         }
@@ -78,7 +78,7 @@ namespace MatchGame
 
             };
 
-        // Function to Set up the Game
+        // Function to Set up the Game --> randomly generated animalEmojis and diplay in Window
         private void SetUpGame()
         {
             // Create a new random number generator
@@ -88,7 +88,7 @@ namespace MatchGame
             List<string> availableEmojiPairs = animalEmoji.ToList();
 
             // Create a list to hold the emoji pairs for the current game
-            List<string> selectedEmojiPairs = new List<string>();
+            List<string> currentEmojiPairs = new List<string>();
 
             // Randomly select 8 pairs of emojis from the available list
             for (int i = 0; i < 8; i++)
@@ -96,15 +96,15 @@ namespace MatchGame
                 // Select a random emoji pair index
                 int index = random.Next(availableEmojiPairs.Count / 2) * 2; // Ensure we select pairs
                                                                             // Add the selected emoji pair to the game list
-                selectedEmojiPairs.Add(availableEmojiPairs[index]);
-                selectedEmojiPairs.Add(availableEmojiPairs[index + 1]);
+                currentEmojiPairs.Add(availableEmojiPairs[index]);
+                currentEmojiPairs.Add(availableEmojiPairs[index + 1]);
                 // Remove the selected emoji pair from the available list to avoid duplicates
                 availableEmojiPairs.RemoveAt(index);
                 availableEmojiPairs.RemoveAt(index);
             }
 
             // Shuffle the selected emoji pairs
-            selectedEmojiPairs = selectedEmojiPairs.OrderBy(x => random.Next()).ToList();
+            currentEmojiPairs = currentEmojiPairs.OrderBy(x => random.Next()).ToList();
 
             // Assign the shuffled emoji pairs to the TextBlocks in the main grid
             int textBlockIndex = 0;
@@ -113,7 +113,7 @@ namespace MatchGame
                 if (textBlock.Name != "timeTextBlock")
                 {
                     textBlock.Visibility = Visibility.Visible;
-                    textBlock.Text = selectedEmojiPairs[textBlockIndex++];
+                    textBlock.Text = currentEmojiPairs[textBlockIndex++];
                 }
             }
 
