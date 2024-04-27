@@ -1,104 +1,89 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
-/*
- * This can be a Version 1 in witch player from the begining see all card.
- * Version 2 can be a little more complex in a sence that player can't see all cards except only card witch click.
- * 
- * 
- * 
- */
+using System.Windows.Threading;
 
 namespace MatchGame
 {
-    using System.Windows.Threading;
-
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        // Dispatcher class - timer
+        // DispatcherTimer to track time
         DispatcherTimer timer = new DispatcherTimer();
-        int tenthsOfSecondsElapsed;
-        int matchesFound;
+        int tenthsOfSecondsElapsed; // Track elapsed time in tenths of a second
+        int matchesFound; // Track the number of matches found
+        float bestTime = float.MaxValue; // Initialize best time as a very large value
+        bool isFirstGame = true; // Flag to track if it's the first game
 
         public MainWindow()
         {
             InitializeComponent();
 
+            // Set up timer properties
             timer.Interval = TimeSpan.FromSeconds(.1);
             timer.Tick += Timer_Tick;
 
+            // Start the game
             SetUpGame();
         }
 
-        // Timer logic, displaying and stopping
+        // Event handler for timer tick
         private void Timer_Tick(object sender, EventArgs e)
         {
+            // Update elapsed time and display
             tenthsOfSecondsElapsed++;
             timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.00");
 
-            // Logic for stoping timer
-            if(matchesFound == 8)
+            // Check if all matches are found
+            if (matchesFound == 8)
             {
-                timer.Stop();
-                timeTextBlock.Text = timeTextBlock.Text + " - Play again?"; // Current time + prompt to play again
-
+                timer.Stop(); // Stop the timer
+                // Check if it's the player's first game
+                if (!isFirstGame)
+                {
+                    // Display message only for subsequent games
+                    if (tenthsOfSecondsElapsed / 10F < bestTime)
+                    {
+                        bestTime = tenthsOfSecondsElapsed / 10F; // Update best time
+                        MessageBox.Show($"Congratulations! You beat your best time: {bestTime} seconds.");
+                    }
+                    else if (tenthsOfSecondsElapsed / 10F == bestTime)
+                    {
+                        MessageBox.Show($"Hmm, seems like your decision speed is the same as your best time: {bestTime} seconds.");
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Come on, you can do much better! Your best time: {bestTime} seconds.");
+                    }
+                }
+                // Update flag for subsequent games
+                isFirstGame = false;
+                timeTextBlock.Text += " - Play again?";
             }
         }
 
-        // Create a List of animals emoji
+        // List of animal emojis for the game
         List<string> animalEmoji = new List<string>()
-            {
-                "🐙","🐙",
-                "🐟","🐟",
-                "🐘","🐘",
-                "🐺","🐺",
-                "🐫","🐫",
-                "🐱‍🐉","🐱‍🐉",
-                "🐯","🐯",
-                "🦔","🦔",
-                "🐼", "🐼",  // New pair
-                "🦁", "🦁",  // New pair
-                "🐍", "🐍",  // New pair
-                "🐨", "🐨",  // New pair
+        {
+            "🐙","🐙", "🐟","🐟", "🐘","🐘", "🐺","🐺", "🐫","🐫", "🐱‍🐉","🐱‍🐉",
+            "🐯","🐯", "🦔","🦔", "🐼", "🐼", "🦁", "🦁", "🐍", "🐍", "🐨", "🐨"
+        };
 
-            };
-
-        // Function to Set up the Game --> randomly generated animalEmojis and diplay in Window
+        // Function to set up the game board
         private void SetUpGame()
         {
-            // Create a new random number generator
             Random random = new Random();
-
-            // Create a list to hold all available emoji pairs
             List<string> availableEmojiPairs = animalEmoji.ToList();
-
-            // Create a list to hold the emoji pairs for the current game
             List<string> currentEmojiPairs = new List<string>();
 
-            // Randomly select 8 pairs of emojis from the available list
+            // Randomly select pairs of emojis for the game
             for (int i = 0; i < 8; i++)
             {
-                // Select a random emoji pair index
-                int index = random.Next(availableEmojiPairs.Count / 2) * 2; // Ensure we select pairs
-                                                                            // Add the selected emoji pair to the game list
+                int index = random.Next(availableEmojiPairs.Count / 2) * 2;
                 currentEmojiPairs.Add(availableEmojiPairs[index]);
                 currentEmojiPairs.Add(availableEmojiPairs[index + 1]);
-                // Remove the selected emoji pair from the available list to avoid duplicates
                 availableEmojiPairs.RemoveAt(index);
                 availableEmojiPairs.RemoveAt(index);
             }
@@ -106,7 +91,7 @@ namespace MatchGame
             // Shuffle the selected emoji pairs
             currentEmojiPairs = currentEmojiPairs.OrderBy(x => random.Next()).ToList();
 
-            // Assign the shuffled emoji pairs to the TextBlocks in the main grid
+            // Assign shuffled emoji pairs to the game board
             int textBlockIndex = 0;
             foreach (TextBlock textBlock in mainGrid.Children.OfType<TextBlock>())
             {
@@ -123,24 +108,27 @@ namespace MatchGame
             matchesFound = 0;
         }
 
-        // Make images response to mouse click
+        // Event handler for clicking on a text block (representing a card)
         TextBlock lastTextBlockClicked;
         bool findingMatch = false;
         private void Text_Block_Mouse_down(object sender, MouseButtonEventArgs e)
         {
             TextBlock textBlock = sender as TextBlock;
-            if(findingMatch == false)
+            // Check if another card is already being flipped
+            if (findingMatch == false)
             {
                 textBlock.Visibility = Visibility.Hidden;
                 lastTextBlockClicked = textBlock;
                 findingMatch = true;
             }
+            // Check if the clicked card matches the previously clicked card
             else if (textBlock.Text == lastTextBlockClicked.Text)
             {
                 matchesFound++;
                 textBlock.Visibility = Visibility.Hidden;
                 findingMatch = false;
             }
+            // If no match, show the previously clicked card again
             else
             {
                 lastTextBlockClicked.Visibility = Visibility.Visible;
@@ -148,15 +136,14 @@ namespace MatchGame
             }
         }
 
-
-        // Event handler for timer
+        // Event handler for clicking on the time text block
         private void TimeTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(matchesFound == 8)
+            // Check if all matches are found, and prompt to play again
+            if (matchesFound == 8)
             {
-                SetUpGame(); // Reset game when all images have been found
+                SetUpGame();
             }
-
         }
     }
 }
